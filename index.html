@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101c1c">
+  <meta name="description" content="《第七码头以北》——一款关于五起命案与一场旧火灾的网页调查推理游戏。">
+  <title>第七码头以北｜案件调查系统</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main id="title-screen" class="title-screen">
+    <div class="title-grid" aria-hidden="true"></div>
+    <section class="title-copy">
+      <p class="eyebrow">临川市刑警支队 · 内部系统 / 2004.12</p>
+      <div class="case-stamp">LC-04-1207</div>
+      <h1>第七码头<br><span>以北</span></h1>
+      <p class="title-sub">五个数字。五名死者。一个被所有人相信的故事。</p>
+      <div class="title-actions">
+        <button id="new-game" class="btn btn-primary">建立调查档案</button>
+        <button id="continue-game" class="btn btn-ghost" hidden>继续调查</button>
+      </div>
+      <p class="content-note">含犯罪案件、死亡与火灾相关文字描述。建议佩戴耳机，在桌面设备上体验。</p>
+    </section>
+    <aside class="title-dossier" aria-label="案件摘要">
+      <div class="folder-tab">绝密 / COPY 07</div>
+      <p class="mono">案件：七码头连续命案</p>
+      <p class="mono">地点：北七码头街区</p>
+      <p class="mono">受害者：5</p>
+      <div class="victim-marks" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div>
+      <blockquote>“不要寻找他们的共同点。<br>去找那个不该在其中的人。”</blockquote>
+    </aside>
+  </main>
+
+  <main id="game-shell" class="game-shell" hidden>
+    <header class="topbar">
+      <div class="brand-block">
+        <span class="status-light"></span>
+        <div><b>LCSD // CASE.NET</b><small>专案编号 LC-04-1207</small></div>
+      </div>
+      <div class="date-block"><span id="game-date">2004 / 12 / 07</span><small id="system-clock">23:17:04</small></div>
+      <div class="metrics">
+        <div><span>案件完成度</span><b id="metric-progress">0%</b></div>
+        <div><span>证据可信度</span><b id="metric-trust">低</b></div>
+        <div><span>调查压力</span><b id="metric-pressure">12</b></div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <nav class="sidebar" aria-label="调查系统导航">
+        <button class="nav-item active" data-view="desk"><span>01</span>案件桌面</button>
+        <button class="nav-item" data-view="map"><span>02</span>城区地图</button>
+        <button class="nav-item" data-view="people"><span>03</span>人物资料</button>
+        <button class="nav-item" data-view="evidence"><span>04</span>证物库 <i id="evidence-count">0</i></button>
+        <button class="nav-item" data-view="timeline"><span>05</span>时间线</button>
+        <button class="nav-item" data-view="board"><span>06</span>推理板</button>
+        <button class="nav-item" data-view="notes"><span>07</span>调查笔记</button>
+        <button class="nav-item locked" data-view="report" id="report-nav"><span>08</span>案件报告</button>
+        <div class="nav-footer">
+          <button id="save-game" class="text-button">[ 手动保存 ]</button>
+          <button id="reset-game" class="text-button danger">[ 清除档案 ]</button>
+          <small>INV. 顾言<br>权限等级 3</small>
+        </div>
+      </nav>
+
+      <section class="main-panel">
+        <div class="panel-heading">
+          <div><p id="view-kicker" class="eyebrow">CASE OVERVIEW</p><h2 id="view-title">案件桌面</h2></div>
+          <p id="chapter-chip" class="chapter-chip">第一章 / 数字 1</p>
+        </div>
+        <div id="view-root" class="view-root" aria-live="polite"></div>
+      </section>
+
+      <aside class="task-rail">
+        <p class="rail-title">当前任务</p>
+        <div id="objective-list"></div>
+        <div class="dispatch-card">
+          <span>专案组调度</span>
+          <p id="dispatch-text">先从第一案现场开始。别急着相信卷宗上的标题。</p>
+        </div>
+        <div class="ticker"><span>内部线路</span><p id="ticker-text">系统已接入 · 等待调查员操作</p></div>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="modal" class="modal">
+    <div class="modal-bar"><span id="modal-label">档案查看器</span><button id="modal-close" aria-label="关闭">×</button></div>
+    <div id="modal-body" class="modal-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="game.js"></script>
+</body>
+</html>
