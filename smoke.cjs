@@ -20,7 +20,13 @@ const url = "http://127.0.0.1:4173";
     await page.click(`[data-loc="${location}"]`);
     for (const i of spots) {
       await page.click(`[data-spot="${i}"]`);
+      const ids = await page.locator("[data-collect-evidence]").evaluateAll(nodes => nodes.map(n => n.dataset.collectEvidence));
       await closeModal();
+      for (const id of ids) {
+        await page.click(`[data-spot="${i}"]`);
+        await page.click(`[data-collect-evidence="${id}"]`);
+        await closeModal();
+      }
     }
   };
   const puzzle = async (id, answer) => {
@@ -62,12 +68,14 @@ const url = "http://127.0.0.1:4173";
 
   // Chapter 1 — natural UI path.
   await intake();
+  assert.equal(await page.locator('[data-desk="intake"]').isDisabled(), true, "chapter intake cannot be repeated");
   await inspect("alley", [0,1,2,3]);
   await inspect("bar", [0,1,2]);
   await nav("evidence");
   await page.click('[data-evidence-view="E005"]');
   assert.match(await page.locator("#modal-body").textContent(), /每周五 23:20/);
   await closeModal();
+  await puzzle("01", 1);
   await puzzle("02", 1);
   await advance("第二章");
 
@@ -76,6 +84,7 @@ const url = "http://127.0.0.1:4173";
   await inspect("sewer", [0,1,2]);
   await inspect("fanghome", [0,1]);
   await inspect("hotel", [0,1,2]);
+  await puzzle("03", 1);
   await puzzle("04", 2);
   await advance("第三章");
 
@@ -105,7 +114,9 @@ const url = "http://127.0.0.1:4173";
   await inspect("police", [0]);
   await inspect("zhao", [0,1]);
   await inspect("bookstore", [0,1,2]);
+  await puzzle("06", 2);
   await puzzle("07", 0);
+  await puzzle("09", 1);
 
   const hasE059 = await page.evaluate(() => JSON.parse(localStorage.getItem("north-of-pier-seven-save-v1")).evidence.includes("E059"));
   if (!hasE059) {
@@ -122,8 +133,11 @@ const url = "http://127.0.0.1:4173";
   await page.click('[data-spot="3"]');
   await page.locator("#bright").evaluate(el => { el.value = 80; el.dispatchEvent(new Event("input", { bubbles: true })); });
   await page.locator("#contrast").evaluate(el => { el.value = 140; el.dispatchEvent(new Event("input", { bubbles: true })); });
-  assert.equal(await page.locator(".photo-readout .ok").count(), 3);
+  assert.match(await page.locator("#read-quality").textContent(), /高/);
   await page.click("[data-photo-submit]");
+  await page.selectOption("#photo-q1", "luo");
+  await page.selectOption("#photo-q2", "break");
+  await page.click("[data-photo-observe]");
   await advance("第五章");
 
   // Chapter 5 — optional safety action and evidence-table comparison.
@@ -150,6 +164,7 @@ const url = "http://127.0.0.1:4173";
   for (let i=0;i<times.length;i++) await page.selectOption(`[data-time-select="${i}"]`, times[i]);
   if(process.env.SCREENSHOT_DIR) await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/timeline-v2.png`,fullPage:true});
   await page.click("[data-check-timeline]");
+  await puzzle("14", 1);
   await interview("huang");
   await interview("huang");
   await interview("huang");
@@ -158,6 +173,8 @@ const url = "http://127.0.0.1:4173";
   assert.equal(base.chapter, 6);
   assert.equal(base.timeline, true);
   assert.equal(base.sunOutcome, "safe");
+  assert.ok(base.findings.length >= 7, "analysis findings should be separate from raw evidence");
+  assert.equal(base.pressure, 0, "correct investigation and ordinary interviews should not add pressure");
 
   const submitEnding = async (patch, suspect, titleIndex, classification, expected) => {
     const next={...base,...patch,ending:null};
