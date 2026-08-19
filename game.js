@@ -28,7 +28,7 @@ E012|维修工具箱与入口记录|B|地下排水道|工具完整；入口巡�
 E013|维修地址纸条|A|地下排水道|吴峰口袋里写着“北七巷 17-4”。纸张来自便民电话旁的留言簿，地址尚未核查。|5
 E014|电话记录 2|A|吴峰住所|21:54 接到同一公共电话亭来电。|5
 E015|地下鞋印|B|地下排水道|工作鞋纹路与后巷相近，但不是唯一型号。|3
-E016|赵氏地产施工图|C|吴峰曾参与北七巷拆迁管线工程，图纸上留有他与赵氏地产工程部的往来批注。|3
+E016|赵氏地产施工图|C|吴峰住所|吴峰曾参与北七巷拆迁管线工程，图纸上留有他与赵氏地产工程部的往来批注。|3
 E017|方蓉尸检报告|A|警局|死亡时间约 21:05，死因为窒息。|5
 E018|旅馆墙面数字 3|B|海鸥旅馆|喷漆书写，媒介再次改变。|4
 E019|黑色相纸 C|A|海鸥旅馆|批次、切口与前两案相纸吻合。|4
@@ -89,15 +89,18 @@ E073|黄启父子照片|A|公交总站|照片背面写有“黄启与父亲黄�
 E074|周成旧警员证|B|周成警务室|证明周成 1992 年已经参与火灾现场记录。|4
 E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾出现在不同年份的拆迁联络或施工往来记录中。|2`;
 
-  const evidence = Object.fromEntries(evRows.trim().split("\n").map(row => {
-    const [id,name,grade,source,desc,stars] = row.split("|");
-    return [id,{id,name,grade,source,desc,stars:+stars}];
+  const evidence = Object.fromEntries(evRows.trim().split("\n").map((row,index) => {
+    const parts=row.split("|");
+    if(parts.length!==6)throw new Error(`证物数据格式错误：第 ${index+1} 行应为 6 段，实际为 ${parts.length} 段`);
+    const [id,name,grade,source,desc,starText]=parts,stars=Number(starText);
+    if(!id||!name||!grade||!source||!desc||!Number.isInteger(stars)||stars<1||stars>5)throw new Error(`证物数据内容错误：第 ${index+1} 行（${id||"未知编号"}）`);
+    return [id,{id,name,grade,source,desc,stars}];
   }));
 
   const findings = {
     F01:{name:"票样比对：17 路",desc:"残片的蓝灰底纹、线路码右半部与检票孔位置只吻合 17 路旧票样。"},
     F02:{name:"地址核查：门牌不存在",desc:"旧门牌簿中北七巷 17 号之后直接是 19 号；17-4 从未登记。"},
-    F03:{name:"装订鉴定：人为拆页",desc:"断口纤维受力方向一致，缺页并非自然脱落，而是沿装订线主动撕除。"},
+    F03:{name:"装订鉴定：人为拆页",desc:"断口纤维受力方向一致，缺页并非自然脱落，而是沿装订线主动撕除；残页背面的移交压痕可辨出‘林正国 / 电影院’。"},
     F04:{name:"款项流向：周成关联账户",desc:"ZC-92-12 经中间账户进入周成哥哥经营的商店。"},
     F05:{name:"车辆匹配：维修 B 车",desc:"路口胎纹、轴距与油漆层次均只吻合维修 B 车。"},
     F06:{name:"第五案模式断裂",desc:"日期、事前来电、相纸形态、数字笔迹与预置痕迹五项偏离前四案；距离、编号与死法差异仍延续旧模式。"},
@@ -130,7 +133,7 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
     {id:"warehouse",name:"河滨仓库",ch:3,x:72,y:26,theme:"warehouse",desc:"第四案现场，也是林凯被约来的地方。",spots:[
       {n:"尸体位置",x:32,y:72,ids:["E025","E026","E027"]},{n:"破损相机",x:62,y:64,ids:["E028","E029"]},{n:"墙边电话记录",x:79,y:32,ids:["E030","E036"]}]},
     {id:"studio",name:"林凯摄影工作室",ch:3,x:57,y:15,theme:"archive",desc:"暗房仍有显影液气味。一个墙柜背板发出空响。",spots:[
-      {n:"工作台",x:25,y:38,ids:["E031","E034"]},{n:"暗房垃圾",x:72,y:68,ids:["E033"]},{n:"文件抽屉",x:57,y:26,ids:["E035"]},{n:"墙柜暗格",x:84,y:43,ids:["E057"]},{n:"暗房水槽",x:38,y:72,ids:[],obs:"水槽里的显影液已经干成一圈银灰色水线。墙上夹着四张没有人物的城市街景，取景位置都在公交站牌对面。"}]},
+      {n:"工作台",x:25,y:38,ids:["E031","E034"]},{n:"暗房垃圾",x:72,y:68,ids:["E033"]},{n:"文件抽屉",x:57,y:26,ids:["E035"]},{n:"墙柜暗格",x:84,y:43,ids:["E057"]},{n:"暗房水槽",x:38,y:72,ids:[],obs:"水槽里的显影液已经干成一圈银灰色水线。墙上夹着四张不同时节的空街照片，边缘都被显影液染黄。"}]},
     {id:"bookstore",name:"二手书店",ch:3,x:36,y:35,theme:"archive",desc:"许文把十二年的报纸、照片和猜测塞满了整个后屋。",spots:[
       {n:"防潮照片袋",x:33,y:57,ids:["E032"]},{n:"旧报纸架",x:68,y:38,ids:["E046","E058"]},{n:"调查笔记",x:78,y:73,ids:["E069"]}]},
     {id:"printworks",name:"北七印刷厂旧址",ch:4,x:60,y:61,theme:"print",desc:"烧毁的厂房即将拆除，机械消防门的残骸还留在墙里。",spots:[
@@ -160,7 +163,7 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
     {id:"T05",name:"第五案不在原计划",need:["E038","E039","E043"],desc:"临时灭口被仓促伪装成第五起连环案件。"},
     {id:"T06",name:"公共电话共同来源",need:["E008","E014","E024","E030"],desc:"电话是行动便利，不是仪式。"},
     {id:"T07",name:"不完整信息造成误会",need:["E032","E057"],desc:"黄启只看到了父亲入仓的第一张照片。"},
-    {id:"T08A",name:"事故报告存在技术矛盾",need:["E049","E060"],desc:"机械消防门不会因停电失效。"},
+    {id:"T08A",name:"事故报告存在技术矛盾",need:["E049","E060"],desc:"机械消防门不会因停电失效；维修索引中的幸存者‘陈某’现登记于社区诊所。"},
     {id:"T08B",name:"旧案报告遭人为篡改",need:["E050","E059"],needsD:["T08A"],needsF:["F03"],desc:"装订鉴定、损坏方向与被删记录证明报告被人为改写。"},
     {id:"T08C",name:"旧案存在系统性掩盖",need:["E052","E053"],needsD:["T08B"],needsF:["F04"],desc:"非法账本、付款流向鉴定与报告篡改形成完整掩盖链。"},
     {id:"T09A",name:"线路观察条件",need:["E005","E021","E061"],needsF:["F01"],desc:"一条公交线路可以长期覆盖三名受害者的固定活动区域。"},
@@ -227,7 +230,7 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
       <div class="card" style="margin-top:15px"><span class="file-ref">ACTIVE THEORY</span><h3>${hasD("T04B")?"连环案可能是伪装":hasD("T04A")?"相纸来源已确认":hasD("T03")?"受害者因可预测而被选中":"共同模式尚未解释"}</h3><p>${hasD("T04B")?"真正目标被隐藏在三个随机死者之中。":hasD("T04A")?"来源相同不等于犯罪结构已经解释，还要判断凶手为何寻找底片。":hasD("T03")?"共同点未必属于死者，也可能属于观察他们的人。":"不要急着给数字和相纸赋予意义。"}</p></div></section></div>${state.chapter===4?chapter4Recap():""}${state.pressureEvents.length?`<div style="margin-top:15px">${state.pressureEvents.map(id=>{const m={media:"媒体已命名本案，证人开始受报道影响。",superior:"上级要求初步嫌疑方向，错误指认将增加更多压力。",sun:"孙倩已经准备独自调查，保护窗口将在第五章开启。",destroy:"周成已经清理部分旧档，缺失报告需从口供恢复。",force:"专案组已达到最高压力，第六章将被要求尽快结案。"};return `<div class="pressure-event">${m[id]}</div>`}).join("")}</div>`:""}`;
   }
   function chapter4Phase(){if(hasD("T08C"))return 3;if(hasF("F03")&&hasD("T08A"))return 2;return 1;}
-  function chapter4Recap(){const p=chapter4Phase(),copy={1:["阶段一 / 核查事故结论","先检查缺页装订与消防门结构。此时不要预设报告被谁修改。"],2:["阶段二 / 追查报告去向","技术矛盾已经成立。周成开始明显紧张，赵启明主动致电询问调查进度。新的旧案地点已经开放。"],3:["阶段三 / 恢复目击序列","掩盖链已经闭合。回到林凯暗房，恢复那卷被损坏的底片。"]}[p];return `<div class="callout chapter-recap"><span class="file-ref">1992 REOPENED / ${p} OF 3</span><h3>${copy[0]}</h3><p>${copy[1]}</p></div>`;}
+  function chapter4Recap(){const p=chapter4Phase(),copy={1:["阶段一 / 核查事故结论","先检查缺页装订与消防门结构。此时不要预设报告被谁修改。"],2:["阶段二 / 沿证据追查报告去向","装订鉴定恢复了‘林正国 / 电影院’的移交压痕，消防门维修索引则指向幸存者‘陈某 / 社区诊所’。周成开始明显紧张，赵启明主动致电询问调查进度。"],3:["阶段三 / 恢复目击序列","掩盖链已经闭合。回到林凯暗房，恢复那卷被损坏的底片。"]}[p];return `<div class="callout chapter-recap"><span class="file-ref">1992 REOPENED / ${p} OF 3</span><h3>${copy[0]}</h3><p>${copy[1]}</p></div>`;}
   function intake(){if(state.intake.includes(state.chapter)){toast("当前章节案卷已经领取");return;}const packs={1:["E001"],2:["E009","E017"],3:["E025"],4:["E047"],5:["E037"],6:["E061"]};const added=addEvidence(packs[state.chapter]);state.intake.push(state.chapter);if(added.length)action({minutes:5});save();render();}
   function advance(){if(!canAdvance())return;if(state.chapter===5&&state.sunOutcome==="pending")state.sunOutcome=state.pressure>=8?"dead":"injured";if(state.chapter<6){state.chapter++;const starts={2:1270,3:1230,4:1175,5:1100,6:1160};state.gameMinutes=starts[state.chapter];if(state.chapter===5)state.sunDeadline=state.actions+3;save();toast(`新章节解锁：${chapters[state.chapter-1].title}`);navigate("desk");}}
 
@@ -257,12 +260,15 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
   function idLabel(id,r){return id==="huang"&&r===2?"进入最终证据攻防":`进行第 ${r+1} 轮`;}
   function interview(id){const p=people.find(x=>x.id===id);let r=state.interviews[id]||0;if(r>=3){openModal("人物结论",`<h3>${p.name}</h3><p>${p.truth}</p>`);return;}const gate=interviewGate(id,r+1);if(!gate.ok){openModal("审讯条件不足",`<div class="gate-box"><h3>当前口供无法被击穿</h3><p>还缺少能直接形成矛盾的材料：${gate.missing.join("、")}。</p></div>`);return;}if(id==="huang"&&r===2){showHuangConfrontation();return;}r++;state.interviews[id]=r;action({minutes:25});if(id==="zhou"&&r===3&&state.destroyedE059)addEvidence(["E059"],true,true);save();openModal(`审讯记录 / 第 ${r} 轮`,`<span class="stamp">口供可信度 ★★</span><h3>${p.name}</h3><p>“${p.rounds[r-1]}”</p><div class="callout">调查员批注：${r===1?"记录陈述，暂不采信。":r===2?"口供与出示证据形成可核查矛盾。":"证据链完成，最终陈述已归档。"}</div>`);renderPeople();}
   const huangConfrontation=[
-    {claim:"“我不认识林凯。那本日历上的‘黄’不是我。”",correct:"E034",prompt:"先证明林凯与一名黄姓人物约定过底片交接。",choices:["E034","E035","E042"]},
+    {claim:"“林凯从来没有约过什么黄姓的人谈底片。”",correct:"E034",prompt:"用林凯本人留下的会面记录直接反驳这句话。",choices:["E034","E035","E042"]},
     {claim:"“姓黄的人很多。那场火和我没有关系。”",correct:"E073",prompt:"再证明黄启与旧案中的黄志远存在直接身份关系。",choices:["E073","E054","E047"]},
     {claim:"“那张照片已经证明我爸进了仓库。他就是纵火者。”",correct:"E057",prompt:"最后用完整序列推翻他只看过的裁切画面。",choices:["E057","E032","E050"]}
   ];
-  function showHuangConfrontation(){const step=Math.min(state.huangConfrontation,2),c=huangConfrontation[step],html=`<span class="stamp">FINAL CONFRONTATION / ${step+1} OF 3</span><h3>黄启证据攻防</h3><blockquote>${c.claim}</blockquote><p>${c.prompt}</p><div class="grid grid-3 confrontation-grid">${c.choices.map(id=>`<button class="card evidence-choice" data-huang-evidence="${id}"><span class="file-ref">${id}</span><b>${evidence[id].name}</b><small>${evidence[id].source}</small></button>`).join("")}</div><div class="callout">选择能够直接反驳当前一句口供的证物。动机或相近事实不能代替这一步证明。</div>`;if(modal.open){$("#modal-label").textContent="最终审讯 / 黄启";modalBody.innerHTML=html;}else openModal("最终审讯 / 黄启",html);}
-  function confrontHuang(id){const step=state.huangConfrontation,c=huangConfrontation[step];if(!c)return;if(id!==c.correct){state.wrong++;action({minutes:10,pressure:1,waste:true});toast("这件材料不能直接反驳当前口供");return;}state.huangConfrontation++;if(state.huangConfrontation<huangConfrontation.length){save();toast("口供出现矛盾，继续追问");showHuangConfrontation();return;}state.interviews.huang=3;action({minutes:25});save();modalBody.innerHTML=`<span class="stamp">CONFESSION RECORDED</span><h3>黄启最终陈述</h3><p>“我只看到他进仓。他们会再说我爸纵火。我不能让那卷照片出去。”</p><div class="callout">E034 建立会面，E073 建立父子身份，E057 推翻裁切照片。三次口供已由不同事实逐层击穿。</div>`;toast("最终审讯完成：黄启口供已归档");renderPeople();}
+  function showHuangConfrontation(){if(state.huangConfrontation>=huangConfrontation.length){showHuangPlayback();return;}const step=state.huangConfrontation,c=huangConfrontation[step],html=`<span class="stamp">FINAL CONFRONTATION / ${step+1} OF 3</span><h3>黄启证据攻防</h3><blockquote>${c.claim}</blockquote><p>${c.prompt}</p><div class="grid grid-3 confrontation-grid">${c.choices.map(id=>`<button class="card evidence-choice" data-huang-evidence="${id}"><span class="file-ref">${id}</span><b>${evidence[id].name}</b><small>${evidence[id].source}</small></button>`).join("")}</div><div class="callout">选择能够直接反驳当前一句口供的证物。动机或相近事实不能代替这一步证明。</div>`;if(modal.open){$("#modal-label").textContent="最终审讯 / 黄启";modalBody.innerHTML=html;}else openModal("最终审讯 / 黄启",html);}
+  let huangPlaybackToken=0;
+  function showHuangPlayback(){const token=++huangPlaybackToken,html=`<span class="stamp">E057 / UNCUT NEGATIVE</span><h3>完整底片连续播放</h3><div class="film-sequence"><div class="film-frame"><time>22:41</time><span>黄志远进入档案仓</span></div><div class="film-frame"><time>22:43</time><span>罗晋川携油桶离开</span></div><div class="film-frame"><time>22:46</time><span>仓内出现火光</span></div><div class="film-frame"><time>22:47</time><span>黄志远从内部砸开消防门</span></div><div class="film-frame"><time>22:48</time><span>三名工人逃离火场</span></div></div><blockquote>黄启：“……后面还有？”</blockquote><div class="action-row"><button class="action primary" data-huang-playback disabled>继续播放（读取中）</button></div>`;if(modal.open){$("#modal-label").textContent="最终审讯 / 未裁切底片";modalBody.innerHTML=html;}else openModal("最终审讯 / 未裁切底片",html);setTimeout(()=>{const button=$("[data-huang-playback]");if(token===huangPlaybackToken&&button){button.disabled=false;button.textContent="继续播放";}},8500);}
+  function completeHuangPlayback(){if(state.interviews.huang>=3)return;huangPlaybackToken++;state.interviews.huang=3;action({minutes:25});save();modalBody.innerHTML=`<span class="stamp">CONFESSION RECORDED</span><h3>黄启最终陈述</h3><p>“我只看到他进仓。他们会再说我爸纵火。我不能让那卷照片出去。”</p><div class="callout">E034 反驳会面否认，E073 建立父子身份，E057 的完整序列推翻裁切画面。三次口供已由不同事实逐层击穿。</div>`;toast("最终审讯完成：黄启口供已归档");renderPeople();}
+  function confrontHuang(id){const step=state.huangConfrontation,c=huangConfrontation[step];if(!c)return;if(id!==c.correct){state.wrong++;action({minutes:10,pressure:1,waste:true});toast("这件材料不能直接反驳当前口供");return;}state.huangConfrontation++;save();if(state.huangConfrontation<huangConfrontation.length){toast("口供出现矛盾，继续追问");showHuangConfrontation();return;}toast("裁切画面已被推翻，正在读取完整序列");showHuangPlayback();}
 
   function renderEvidence(){
     const owned=state.evidence.map(id=>evidence[id]).filter(Boolean);
@@ -315,14 +321,14 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
     {id:"date",label:"案发日",v:["周五","周五","周五","周五","周日"],breaks:true},
     {id:"call",label:"目标行动前来电",v:["有","有","有（未接）","有","无"],breaks:true},
     {id:"paper",label:"黑色相纸形态",v:["整片","整片","整片","整片","小块撕片"],breaks:true},
-    {id:"number",label:"现场数字",v:["1","2","3","4","5"],breaks:false},
-    {id:"distance",label:"距公交线路步行范围",v:["近","近","近","近","近"],breaks:false},
-    {id:"method",label:"死亡方式",v:["重击","溺水","窒息","锐器失血","车辆撞击"],breaks:false},
+    {id:"number",label:"现场数字",v:["1","2","3","4","5"],breaks:false,whyNot:"数字仍按一至五连续出现，第五案延续了编号模式。"},
+    {id:"distance",label:"距公交线路步行范围",v:["近","近","近","近","近"],breaks:false,whyNot:"第五处现场仍位于同一公交观察范围内，没有破坏空间模式。"},
+    {id:"method",label:"死亡方式",v:["重击","溺水","窒息","锐器失血","车辆撞击"],breaks:false,whyNot:"前四案死亡方式本来就各不相同，因此第五案使用车辆不能单独证明其脱离模式。"},
     {id:"writing",label:"数字笔迹",v:["稳定","稳定","稳定","稳定","倾斜重描"],breaks:true},
     {id:"setup",label:"现场预置痕迹",v:["有","有","有","有","未发现"],breaks:true}
   ];
-  function showCaseCompare(){openModal("谜题 10 / 五案横向复核",`<h3 tabindex="-1" data-autofocus>哪些特征真正破坏了前四案模式？</h3><p>表格只列事实。第五案仍然相同的项目也混在其中，请不要把所有差异都当成模式断裂。</p><div class="case-table-wrap"><table class="case-compare"><thead><tr><th>特征</th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>判断</th></tr></thead><tbody>${caseComparisonRows.map(r=>`<tr><td>${r.label}</td>${r.v.map(v=>`<td>${v}</td>`).join("")}<td><label><input type="checkbox" data-case-anomaly="${r.id}"> 破坏模式</label></td></tr>`).join("")}</tbody></table></div><label>根据被破坏的模式判断第五案性质</label><select id="case5-nature"><option value="">选择结论</option><option value="copy">独立模仿犯罪</option><option value="silence">发现调查后发生的临时灭口</option><option value="accident">与前四案无关的交通意外</option></select><div class="action-row"><button class="action primary" data-case-compare-submit>提交横向分析</button></div>`);modal.classList.add("modal-wide");}
-  function solveCaseCompare(){const selected=$$("[data-case-anomaly]:checked").map(x=>x.dataset.caseAnomaly),correct=caseComparisonRows.filter(r=>r.breaks).map(r=>r.id),missing=correct.filter(id=>!selected.includes(id)),extra=selected.filter(id=>!correct.includes(id)),nature=$("#case5-nature").value;if(!missing.length&&!extra.length&&nature==="silence"){addFinding("F06");addDeduction("T05");addPuzzle("10");closeModal();toast("五案横向比较完成");render();}else{state.wrong++;action({minutes:15,pressure:1,waste:true});toast(missing.length||extra.length?`模式判断仍有 ${missing.length+extra.length} 项无法自洽`:"事实比较成立，但案件性质仍未解释");}}
+  function showCaseCompare(){openModal("谜题 10 / 五案横向复核",`<h3 tabindex="-1" data-autofocus>哪些特征真正破坏了前四案模式？</h3><p>表格只列事实。第五案仍然相同的项目也混在其中，请不要把所有差异都当成模式断裂。</p><div class="case-table-wrap"><table class="case-compare"><thead><tr><th>特征</th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>判断</th></tr></thead><tbody>${caseComparisonRows.map(r=>`<tr><td>${r.label}</td>${r.v.map(v=>`<td>${v}</td>`).join("")}<td><label><input type="checkbox" data-case-anomaly="${r.id}"> 破坏模式</label></td></tr>`).join("")}</tbody></table></div><div id="case-feedback" class="case-feedback" hidden></div><label>根据被破坏的模式判断第五案性质</label><select id="case5-nature"><option value="">选择结论</option><option value="copy">独立模仿犯罪</option><option value="silence">发现调查后发生的临时灭口</option><option value="accident">与前四案无关的交通意外</option></select><div class="action-row"><button class="action primary" data-case-compare-submit>提交横向分析</button></div>`);modal.classList.add("modal-wide");}
+  function solveCaseCompare(){const selected=$$("[data-case-anomaly]:checked").map(x=>x.dataset.caseAnomaly),correct=caseComparisonRows.filter(r=>r.breaks).map(r=>r.id),missing=correct.filter(id=>!selected.includes(id)),extra=selected.filter(id=>!correct.includes(id)),nature=$("#case5-nature").value;if(!missing.length&&!extra.length&&nature==="silence"){addFinding("F06");addDeduction("T05");addPuzzle("10");closeModal();toast("五案横向比较完成");render();}else{state.wrong++;action({minutes:15,pressure:1,waste:true});const feedback=$("#case-feedback"),extraRow=caseComparisonRows.find(r=>extra.includes(r.id));feedback.hidden=false;feedback.textContent=extraRow?.whyNot||(missing.length?`仍有 ${missing.length} 项真正破坏稳定模式的事实未被标记。`:"事实筛选成立，但当前案件定性仍无法解释临时撕片和未预置现场。");toast(missing.length||extra.length?`模式判断仍有 ${missing.length+extra.length} 项无法自洽`:"事实比较成立，但案件性质仍未解释");}}
   function showAnswerMachine(){openModal("谜题 11 / 魏安答录机",`<h3>请输入四位密码</h3><p>桌上的日期：1119 / 1126 / 1203。便签提示只有三个字：<b>“下一次”</b>。</p><input id="phone-code" maxlength="4" inputmode="numeric" placeholder="0000" style="background:#0e1716;border:1px solid #52685f;color:white;padding:12px;font:22px var(--mono);letter-spacing:.4em"><div class="action-row"><button class="action primary" data-phone-submit>播放留言</button></div>`);}
   function solvePhone(){if($("#phone-code").value==="1210"){addPuzzle("11");addEvidence(["E043"]);closeModal();toast("留言已提取为 E043");render();}else{state.wrong++;action({minutes:15,pressure:1,waste:true});toast("密码错误");}}
   function showPhotoPuzzle(){openModal("谜题 08 / 底片恢复",`<h3>恢复 1992 年底片序列</h3><p>调整曝光与对比度，使不同区域达到可读状态。系统只报告整体清晰度，不解释画面内容。</p><div class="photo-puzzle"><div id="photo-frame" class="photo-frame"></div><div class="puzzle-controls"><label>曝光亮度</label><input id="bright" aria-label="曝光亮度" type="range" min="20" max="100" value="55"><label>对比度</label><input id="contrast" aria-label="对比度" type="range" min="70" max="180" value="100"><div class="photo-readout"><div id="read-quality">影像清晰度：低</div></div><div class="action-row"><button class="action primary" data-photo-submit>固定显影参数</button></div></div></div>`);bindPhoto();}
@@ -344,8 +350,8 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
     {q:"黄启为什么杀林凯？",opts:["误以为照片会证明父亲纵火","林凯勒索他","掩盖公交事故"],a:0},
     {q:"五案凶手是谁？",opts:["周成","赵启明","黄启"],a:2}
   ];
-  function renderReport(){if(state.ending){renderEnding();return;}root.innerHTML=`<div class="section-intro"><p>报告将决定案件对外定性。请让每项结论都能解释已入库证物。提交后仍可返回最后存档重试。</p><span class="tag red">FINAL SUBMISSION</span></div><form id="report-form" class="report-form"><div class="card"><label style="display:block;margin-bottom:8px">报告标题</label><select id="report-title"><option>七码头连环杀人案调查报告</option><option>北七码头五起关联杀人案件调查报告</option></select></div>${reportQs.map((x,i)=>`<div class="report-question"><label><span>Q${String(i+1).padStart(2,"0")}</span>${x.q}</label><select name="q${i}" required><option value="">选择结论</option>${x.opts.map((o,j)=>`<option value="${j}">${o}</option>`).join("")}</select></div>`).join("")}<div class="report-question"><label><span>CLASSIFICATION</span>是否存在真正意义上的“连环杀手”？</label><select id="classification"><option value="serial">存在，同一凶手连续作案</option><option value="constructed">不存在，这是为隐藏单一目标制造的犯罪叙事</option></select></div><div class="action-row"><button class="action primary" type="submit">签署并提交报告</button></div></form>`;}
-  function submitReport(form){const data=new FormData(form);const raw=reportQs.map((_,i)=>data.get(`q${i}`));if(raw.some(v=>v===""||v===null)){toast("报告仍有未完成项目");return;}const vals=raw.map(Number);const score=vals.filter((v,i)=>v===reportQs[i].a).length;const suspect=vals[9],relatedTitle=$("#report-title").selectedIndex===1,constructed=$("#classification").value==="constructed",hidden=relatedTitle&&constructed,serialNarrative=!relatedTitle&&!constructed;
+  function renderReport(){if(state.ending){renderEnding();return;}root.innerHTML=`<div class="section-intro"><p>报告将决定案件对外定性。请让每项结论都能解释已入库证物。提交后仍可返回最后存档重试。</p><span class="tag red">FINAL SUBMISSION</span></div><form id="report-form" class="report-form"><div class="card"><label style="display:block;margin-bottom:8px">报告标题</label><select id="report-title"><option>七码头连环杀人案调查报告</option><option>北七码头五起关联杀人案件调查报告</option></select></div>${reportQs.map((x,i)=>`<div class="report-question"><label><span>Q${String(i+1).padStart(2,"0")}</span>${x.q}</label><select name="q${i}" required><option value="">选择结论</option>${x.opts.map((o,j)=>`<option value="${j}">${o}</option>`).join("")}</select></div>`).join("")}<div class="report-question"><label><span>CLASSIFICATION</span>是否存在真正意义上的“连环杀手”？</label><select id="classification"><option value="serial">存在，同一凶手连续作案</option><option value="constructed">不存在，这是为隐藏单一目标制造的犯罪叙事</option></select></div><div id="report-conflict" class="gate-box report-conflict" hidden></div><div class="action-row"><button class="action primary" type="submit">签署并提交报告</button></div></form>`;}
+  function submitReport(form){const data=new FormData(form);const raw=reportQs.map((_,i)=>data.get(`q${i}`));if(raw.some(v=>v===""||v===null)){toast("报告仍有未完成项目");return;}const vals=raw.map(Number);const suspect=vals[9],relatedTitle=$("#report-title").selectedIndex===1,constructed=$("#classification").value==="constructed",conflict=$("#report-conflict");if(relatedTitle!==constructed){conflict.hidden=false;conflict.innerHTML="<h3>报告逻辑冲突</h3><p>报告标题与案件定性存在逻辑冲突，请重新确认。</p>";conflict.scrollIntoView({behavior:"smooth",block:"center"});return;}conflict.hidden=true;const score=vals.filter((v,i)=>v===reportQs[i].a).length,hidden=relatedTitle&&constructed,serialNarrative=!relatedTitle&&!constructed;
     const fullOld=["E047","E048","E049","E050","E051","E052","E053","E054","E055","E056","E057","E059","E060"].every(has);const fullLogic=["T04B","T05","T08C","T09A","T09B","T10"].every(hasD)&&state.timeline;
     let type;if(suspect!==2||score<7)type="C";else if(state.sunOutcome==="dead")type="D";else if(score===10&&state.photo&&hidden&&fullOld&&fullLogic)type="E";else if(score===10&&state.photo&&serialNarrative)type="B";else if(score===10&&state.photo)type="A";else type="B";state.ending={type,score,suspect};addPuzzle("15");save();renderEnding();}
   function renderEnding(){const endings={
@@ -365,7 +371,7 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
     const sp=e.target.closest("[data-spot]");if(sp){inspectSpot(+sp.dataset.spot);return;}
     const collect=e.target.closest("[data-collect-evidence]");if(collect){collectEvidence(collect.dataset.collectEvidence);return;}
     const per=e.target.closest("[data-person]");if(per){interview(per.dataset.person);return;}
-    const confront=e.target.closest("[data-huang-evidence]");if(confront){confrontHuang(confront.dataset.huangEvidence);return;}
+    const confront=e.target.closest("[data-huang-evidence]");if(confront){confrontHuang(confront.dataset.huangEvidence);return;}if(e.target.closest("[data-huang-playback]")){completeHuangPlayback();return;}
     const evView=e.target.closest("[data-evidence-view]");if(evView){viewEvidence(evView.dataset.evidenceView);return;}const evSelect=e.target.closest("[data-evidence-select]");if(evSelect){selectEvidence(evSelect.dataset.evidenceSelect);return;}const evModal=e.target.closest("[data-evidence-add-from-modal]");if(evModal){const id=evModal.dataset.evidenceAddFromModal;if(state.selected.includes(id))state.selected=state.selected.filter(x=>x!==id);else if(state.selected.length<5)state.selected.push(id);closeModal();renderEvidence();return;}
     if(e.target.closest("[data-clear-selection]")){state.selected=[];renderEvidence();return;}if(e.target.closest("[data-combine]")){combine();return;}
     const pu=e.target.closest("[data-puzzle]");if(pu){startPuzzle(pu.dataset.puzzle);return;}const ans=e.target.closest("[data-answer]");if(ans){const [p,c]=ans.dataset.answer.split(":");answerPuzzle(p,c);return;}
@@ -383,3 +389,4 @@ E075|赵氏地产名单|C|赵氏地产|唐辉、吴峰、方蓉的姓名都曾�
   // Contextual fifth-chapter safety action appears on desk/task flow.
   const originalDesk=renderDesk;renderDesk=function(){originalDesk();if(state.chapter===5&&!state.sunSafe){const remain=Math.max(0,(state.sunDeadline??state.actions)-state.actions);root.insertAdjacentHTML("beforeend",`<div class="callout" style="margin-top:16px"><b>可选紧急行动：</b>${state.sunOutcome==="pending"?`孙倩准备独自前往公交总站。剩余调查行动：${remain}`:state.sunOutcome==="dead"?"孙倩已经失联。":"孙倩独自调查时受伤，已经送医。"}<div class="action-row"><button class="action red" data-protect-sun ${state.sunOutcome!=="pending"?"disabled":""}>申请警方保护（+1 行动）</button></div><small>忽略该行动不会阻止第五章结束，但会改变后续结局。</small></div>`);}};
 })();
+

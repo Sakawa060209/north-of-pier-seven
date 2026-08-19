@@ -86,6 +86,10 @@ const url = "http://127.0.0.1:4173";
   await inspect("sewer", [0,1,2]);
   await inspect("fanghome", [0,1]);
   await inspect("hotel", [0,1,2]);
+  await nav("evidence");
+  await page.click('[data-evidence-view="E016"]');
+  assert.match(await page.locator("#modal-body").textContent(), /吴峰住所[\s\S]*吴峰曾参与北七巷拆迁管线工程/);
+  await closeModal();
   await puzzle("03", 1);
   await puzzle("04", 2);
   await nav("desk");
@@ -118,7 +122,7 @@ const url = "http://127.0.0.1:4173";
   await puzzle("06", 2);
   await puzzle("07", 0);
   await nav("desk");
-  assert.match(await page.locator(".chapter-recap").textContent(), /阶段二|周成开始明显紧张/);
+  assert.match(await page.locator(".chapter-recap").textContent(), /阶段二[\s\S]*林正国 \/ 电影院[\s\S]*陈某 \/ 社区诊所[\s\S]*周成开始明显紧张/);
   await nav("map");
   assert.equal(await page.locator('[data-loc="basement"]').count(),1,"phase two unlocks witness and archive locations");
   await inspect("office", [1]);
@@ -169,6 +173,14 @@ const url = "http://127.0.0.1:4173";
   await nav("people");
   assert.match(await page.locator('[data-person="huang"]').locator("xpath=ancestor::article").textContent(), /临川公交司机/);
   assert.doesNotMatch(await page.locator('[data-person="huang"]').locator("xpath=ancestor::article").textContent(), /17 路晚班/);
+  const beforeCaseCompare=await page.evaluate(()=>JSON.parse(localStorage.getItem("north-of-pier-seven-save-v1")));
+  await nav("board"); await page.click('[data-puzzle="10"]');
+  await page.check('[data-case-anomaly="method"]');
+  await page.selectOption("#case5-nature", "silence");
+  await page.click("[data-case-compare-submit]");
+  assert.match(await page.locator("#case-feedback").textContent(), /前四案死亡方式本来就各不相同/);
+  await page.evaluate(v=>localStorage.setItem("north-of-pier-seven-save-v1",JSON.stringify(v)),beforeCaseCompare);
+  await page.reload({waitUntil:"networkidle"}); await page.click("#continue-game");
   await nav("board"); await page.click('[data-puzzle="10"]');
   if(process.env.SCREENSHOT_DIR) await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/case-compare-v2.png`,fullPage:true});
   for (const id of ["date","call","paper","writing","setup"]) await page.check(`[data-case-anomaly="${id}"]`);
@@ -206,6 +218,9 @@ const url = "http://127.0.0.1:4173";
   await page.click('[data-huang-evidence="E034"]');
   await page.click('[data-huang-evidence="E073"]');
   await page.click('[data-huang-evidence="E057"]');
+  assert.match(await page.locator("#modal-body").textContent(), /22:41[\s\S]*22:43[\s\S]*22:46[\s\S]*22:47[\s\S]*22:48/);
+  assert.match(await page.locator("#modal-body").textContent(), /……后面还有/);
+  await page.click("[data-huang-playback]");
   assert.match(await page.locator("#modal-body").textContent(),/三次口供已由不同事实逐层击穿/);
   await closeModal();
 
@@ -239,10 +254,20 @@ const url = "http://127.0.0.1:4173";
     assert.match(await page.locator(".ending h3").textContent(), new RegExp(expected));
   };
 
-  // Five endings, coherent hidden classification, plus dynamic wrong-suspect copy.
+  // Contradictory title and classification are rejected before any ending is selected.
+  await page.evaluate(v => localStorage.setItem("north-of-pier-seven-save-v1", JSON.stringify({...v,ending:null})), base);
+  await page.reload({waitUntil:"networkidle"}); await page.click("#continue-game"); await nav("report");
+  const coherentAnswers=[1,1,1,1,0,0,2,0,0,2];
+  for (let i=0;i<coherentAnswers.length;i++) await page.selectOption(`[name="q${i}"]`, String(coherentAnswers[i]));
+  await page.selectOption("#report-title", {index:1}); await page.selectOption("#classification", "serial");
+  await page.click('#report-form button[type="submit"]');
+  assert.match(await page.locator("#report-conflict").textContent(), /报告标题与案件定性存在逻辑冲突/);
+  assert.equal(await page.locator(".ending").count(),0);
+
+  // Five endings, coherent title/classification pairs, plus dynamic wrong-suspect copy.
   await submitEnding({},2,1,"constructed","没有连环杀手");
   if(process.env.SCREENSHOT_DIR) await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/ending-v2.png`,fullPage:true});
-  await submitEnding({},2,1,"serial","照片上的人");
+  await submitEnding({evidence:base.evidence.filter(id=>id!=="E059")},2,1,"constructed","照片上的人");
   await submitEnding({},2,0,"serial","七码头杀手");
   await submitEnding({sunSafe:false,sunOutcome:"dead"},2,0,"serial","第六个数字");
   await submitEnding({},1,0,"serial","错误的人");
@@ -270,6 +295,7 @@ const url = "http://127.0.0.1:4173";
   if(process.env.SCREENSHOT_DIR) await mobile.screenshot({path:`${process.env.SCREENSHOT_DIR}/mobile-v2.png`,fullPage:true});
 
   assert.deepEqual(errors,[]);
-  console.log("Regression passed: natural six-chapter run, gating, revisit states, five endings, dark-ending reachability, and mobile layout.");
+  console.log("Regression passed: evidence schema, natural six-chapter run, case feedback, photo playback, report coherence, five endings, and mobile layout.");
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
+
