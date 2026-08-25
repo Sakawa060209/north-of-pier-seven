@@ -101,6 +101,11 @@ const url = "http://127.0.0.1:4173";
   await inspect("warehouse", [0,1,2]);
   await inspect("studio", [0,1,2]);
   await inspect("bookstore", [0,1,2]);
+  await nav("evidence"); await page.click('[data-evidence-view="E032"]');
+  assert.match(await page.locator("#modal-body").textContent(), /只保留 22:41[\s\S]*前后连续画面均未包含/);
+  assert.doesNotMatch(await page.locator("#modal-body").textContent(), /黄启|误会/);
+  await closeModal();
+  await combine(["E008","E014","E024","E030"]);
   await nav("board");
   await page.click('[data-puzzle="05"]');
   await page.click('[data-answer="05a:1"]');
@@ -163,6 +168,11 @@ const url = "http://127.0.0.1:4173";
 
   // Chapter 5 — optional safety action and evidence-table comparison.
   await intake();
+  await nav("evidence"); await page.click('[data-evidence-view="E037"]');
+  assert.match(await page.locator("#modal-body").textContent(), /重击、溺水、窒息和锐器失血/);
+  assert.doesNotMatch(await page.locator("#modal-body").textContent(), /作案方式与前四案明显不同/);
+  await closeModal();
+  await nav("desk");
   await page.click("[data-protect-sun]");
   await inspect("booth", [0,1]);
   await nav("map"); await page.click('[data-loc="news"]');
@@ -196,6 +206,9 @@ const url = "http://127.0.0.1:4173";
 
   // Chapter 6 — all four cases, then evidence-gated interrogation.
   await intake();
+  await nav("report");
+  assert.match(await page.locator("#view-root").textContent(), /报告尚不能签署[\s\S]*四案时间线[\s\S]*第五案车辆鉴定[\s\S]*黄启最终口供/);
+  assert.equal(await page.locator("#report-form").count(),0,"chapter six cannot bypass final investigation work");
   // Puzzle 13 must rely on E012's entry time, not the unrelated address slip E013.
   const beforeTimeline=await page.evaluate(()=>JSON.parse(localStorage.getItem("north-of-pier-seven-save-v1")));
   await page.evaluate(v=>localStorage.setItem("north-of-pier-seven-save-v1",JSON.stringify({...v,evidence:v.evidence.filter(id=>id!=="E013")})),beforeTimeline);
@@ -211,16 +224,24 @@ const url = "http://127.0.0.1:4173";
   for (let i=0;i<times.length;i++) await page.selectOption(`[data-time-select="${i}"]`, times[i]);
   if(process.env.SCREENSHOT_DIR) await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/timeline-v2.png`,fullPage:true});
   await page.click("[data-check-timeline]");
+  await interview("huang");
+  await interview("huang");
+  await nav("people");
+  assert.equal(await page.locator('[data-person="huang"]').isDisabled(),true,"F05 vehicle match gates Huang's final confrontation");
+  await nav("report");
+  assert.match(await page.locator("#view-root").textContent(), /第五案车辆鉴定[\s\S]*黄启最终口供/);
   await puzzle("14", 1);
-  await interview("huang");
-  await interview("huang");
   await nav("people"); await page.click('[data-person="huang"]');
   await page.click('[data-huang-evidence="E034"]');
+  assert.match(await page.locator("#modal-body").textContent(), /我和这个人没有亲属关系/);
   await page.click('[data-huang-evidence="E073"]');
   await page.click('[data-huang-evidence="E057"]');
-  assert.match(await page.locator("#modal-body").textContent(), /22:41[\s\S]*22:43[\s\S]*22:46[\s\S]*22:47[\s\S]*22:48/);
-  assert.match(await page.locator("#modal-body").textContent(), /……后面还有/);
+  assert.match(await page.locator("#modal-body").textContent(), /22:41[\s\S]*22:43[\s\S]*22:46/);
+  assert.doesNotMatch(await page.locator("#modal-body").textContent(), /22:47|22:48/);
+  assert.equal(await page.locator("#huang-playback-line").isHidden(),true,"Huang's reaction waits for the first three frames");
   await page.click("[data-huang-playback]");
+  assert.match(await page.locator("#modal-body").textContent(), /22:47[\s\S]*22:48/);
+  await page.waitForFunction(()=>document.querySelector("#modal-body")?.textContent.includes("三次口供已由不同事实逐层击穿"),null,{timeout:6000});
   assert.match(await page.locator("#modal-body").textContent(),/三次口供已由不同事实逐层击穿/);
   await closeModal();
 
@@ -240,15 +261,24 @@ const url = "http://127.0.0.1:4173";
   assert.equal(afterWrong.pressure,1); assert.equal(afterWrong.huangConfrontation,0); assert.equal(afterWrong.interviews.huang,2);
   await closeModal();
 
+  // Reduced-motion players see the first playback pause without the fixed 5.2 second delay.
+  const reducedPlayback={...base,interviews:{...base.interviews,huang:2},huangConfrontation:3,ending:null};
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.evaluate(v=>localStorage.setItem("north-of-pier-seven-save-v1",JSON.stringify(v)),reducedPlayback);
+  await page.reload({waitUntil:"networkidle"}); await page.click("#continue-game"); await nav("people"); await page.click('[data-person="huang"]');
+  const reducedStarted=Date.now();
+  await page.waitForFunction(()=>!document.querySelector("[data-huang-playback]")?.disabled,null,{timeout:1500});
+  assert.ok(Date.now()-reducedStarted<1500,"reduced motion removes the cinematic wait");
+  await closeModal(); await page.emulateMedia({reducedMotion:"no-preference"});
+
   const submitEnding = async (patch, suspect, titleIndex, classification, expected) => {
     const next={...base,...patch,ending:null};
     await page.evaluate(v => localStorage.setItem("north-of-pier-seven-save-v1", JSON.stringify(v)), next);
     await page.reload({ waitUntil: "networkidle" });
     await page.click("#continue-game");
     await nav("report");
-    const answers=[1,1,1,1,0,0,2,0,0,suspect];
-    for (let i=0;i<answers.length;i++) await page.selectOption(`[name="q${i}"]`, String(answers[i]));
-    await page.selectOption("#report-title", { index:titleIndex });
+    await page.selectOption("#report-title", titleIndex===1?"related":"serial");
+    await page.selectOption("#report-suspect", String(suspect));
     await page.selectOption("#classification", classification);
     await page.click('#report-form button[type="submit"]');
     assert.match(await page.locator(".ending h3").textContent(), new RegExp(expected));
@@ -257,9 +287,10 @@ const url = "http://127.0.0.1:4173";
   // Contradictory title and classification are rejected before any ending is selected.
   await page.evaluate(v => localStorage.setItem("north-of-pier-seven-save-v1", JSON.stringify({...v,ending:null})), base);
   await page.reload({waitUntil:"networkidle"}); await page.click("#continue-game"); await nav("report");
-  const coherentAnswers=[1,1,1,1,0,0,2,0,0,2];
-  for (let i=0;i<coherentAnswers.length;i++) await page.selectOption(`[name="q${i}"]`, String(coherentAnswers[i]));
-  await page.selectOption("#report-title", {index:1}); await page.selectOption("#classification", "serial");
+  assert.equal(await page.locator('[name^="q"]').count(),0,"proven facts are archived instead of re-tested as ten dropdowns");
+  assert.equal(await page.locator(".report-fact.verified").count(),9);
+  assert.equal(await page.locator("#classification").inputValue(),"","final classification has no default narrative");
+  await page.selectOption("#report-title", "related"); await page.selectOption("#report-suspect", "2"); await page.selectOption("#classification", "serial");
   await page.click('#report-form button[type="submit"]');
   assert.match(await page.locator("#report-conflict").textContent(), /报告标题与案件定性存在逻辑冲突/);
   assert.equal(await page.locator(".ending").count(),0);
@@ -269,6 +300,10 @@ const url = "http://127.0.0.1:4173";
   if(process.env.SCREENSHOT_DIR) await page.screenshot({path:`${process.env.SCREENSHOT_DIR}/ending-v2.png`,fullPage:true});
   await submitEnding({evidence:base.evidence.filter(id=>id!=="E059")},2,1,"constructed","照片上的人");
   await submitEnding({},2,0,"serial","七码头杀手");
+  await submitEnding({deductions:base.deductions.filter(id=>id!=="T06")},2,1,"constructed","未闭合的真相");
+  assert.doesNotMatch(await page.locator(".ending").textContent(), /报告仍沿用了/);
+  await submitEnding({deductions:base.deductions.filter(id=>id!=="T08C")},2,1,"constructed","未闭合的真相");
+  assert.match(await page.locator(".ending").textContent(), /旧案责任链仍未达到公开标准/);
   await submitEnding({sunSafe:false,sunOutcome:"dead"},2,0,"serial","第六个数字");
   await submitEnding({},1,0,"serial","错误的人");
   assert.match(await page.locator(".ending").textContent(), /赵启明/);
@@ -295,7 +330,7 @@ const url = "http://127.0.0.1:4173";
   if(process.env.SCREENSHOT_DIR) await mobile.screenshot({path:`${process.env.SCREENSHOT_DIR}/mobile-v2.png`,fullPage:true});
 
   assert.deepEqual(errors,[]);
-  console.log("Regression passed: evidence schema, natural six-chapter run, case feedback, photo playback, report coherence, five endings, and mobile layout.");
+  console.log("Regression passed: final-chain gates, objective evidence copy, two-stage playback, archived report facts, dynamic endings, and mobile layout.");
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
 
